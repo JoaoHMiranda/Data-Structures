@@ -29,7 +29,7 @@ public:
 		}
 		int maiorl=maxdist(r->left);
 		int maiorr=maxdist(r->right);
-		if(maior<maiorl+maiorr+r->D){
+		if(maior<maiorl+maiorr+r->D &&( r->left ||r->right)){
 			maior=maiorl+maiorr+r->D;
 		}
 		return max(maiorl,maiorr)+r->D;
@@ -94,4 +94,3 @@ public:
 		N=0;
 	}
 };
-
