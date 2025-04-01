@@ -1,183 +1,173 @@
-#include <bits/stdc++.h>
+#ifndef BBTREE2_H
+#define BBTREE2_H
 
+#include <iostream>
+#include <algorithm>
 using namespace std;
 
-
-//Node Arvore Bi
-template<class trem> 
-class Tnode{
+// Binary Tree Node
+template<class T>
+class Tnode {
 public:
-	trem D;
-	int Peso;
-	Tnode<trem>* left;
-	Tnode<trem>* right;
-	
-	static Tnode<trem>* montaNode(trem dat,int peso){
-		Tnode<trem>* P=new Tnode;
-		if(P){
-			if(dat==' '){
-				dat='-';
-			}
-			P->Peso=peso;
-			P->D=dat;
-			P->left=0;
-			P->right=0;
-		}
-		return P;
-	}
-
-	static trem desmontaNode(Tnode<trem>* P){
-		trem x;
-		if(P){
-			x=P->D;
-			delete P;
-		}
-		return x;
-	}
+    T data;
+    int weight;
+    Tnode<T>* left;
+    Tnode<T>* right;
+    
+    // Creates a node. If the character is a space, it is replaced by '-' for encoding purposes.
+    static Tnode<T>* createNode(T value, int wt) {
+        Tnode<T>* node = new Tnode<T>;
+        if (node) {
+            if (value == ' ')
+                value = '-';
+            node->data = value;
+            node->weight = wt;
+            node->left = nullptr;
+            node->right = nullptr;
+        }
+        return node;
+    }
+    
+    // Destroys a node and returns its data.
+    static T destroyNode(Tnode<T>* node) {
+        T value;
+        if (node) {
+            value = node->data;
+            delete node;
+        }
+        return value;
+    }
 };
 
-
-
-
-
-
-
-
-//Arvore Bi
-template<class trem>class bbtree{
+// Binary Tree class (used to build the Huffman tree)
+template<class T>
+class BinaryTree {
 public:
-    Tnode<trem>* root;
-    int N;
-
-    bbtree(){
-		root = 0;
-		N = 0;
-	}
-	
-
-    bbtree(Tnode<trem>* A, Tnode<trem>* B){
-		root = 0;
-		N = 3;
-		int a=A->Peso;
-		int b=B->Peso;
-		root = Tnode<trem>::montaNode('_',a+b);
-		if(a>=b){
-			root->right=A;
-			root->left=B;
-		}
-		else {
-			root->right=B;
-			root->left=A;
-		}
-	}
-	int getpeso(){
-		return root->Peso;
-	}
-	
-	Tnode<trem>* getRoot(){
-		return root;
-	}
-	
-	
-    bool insert(Tnode<trem>*aux,Tnode<trem>**P){
-		if(!*P){
-			*P = aux;
-			return true;
-		}
-		if(((*P)->Peso) == (aux->Peso)){
-			Tnode<trem>::desmontaNode(aux);
-			return false;
-		}
-		if(aux->Peso < (*P)->Peso){ 
-			//vai para esquerda
-			return insert(aux,&(*P)->left);
-		}
-		return insert(aux,&(*P)->right);
-	}
-	
-	
-	
-	bool insert(trem x,int peso){
-		Tnode<trem> *B = Tnode<trem>::montaNode(x,peso);
-		if(!B){
-			return false;
-		}
-		if(insert(B,&root)){
-			N++;
-			return true;
-		}
-		return false;
-	}
-	
-	
-	
-    Tnode<trem> *erase(Tnode<trem>**R,trem x){
-		Tnode<trem> *aux;
-		if(!(*R)) return 0;
-		if(x < (*R)->Peso){
-			return erase(&(*R)->left,x);
-		}
-		if(x > (*R)->Peso){
-			return erase(&(*R)->right,x);
-		}
-		if(!(*R)->left){
-			aux = *R;
-			*R = (*R)->right;
-			return aux;
-		}
-		if(!(*R)->right){
-			aux = *R;
-			*R = (*R)->left;
-			return aux;
-		}
-		Tnode<trem> *M = rmin((*R)->right);
-		swap(M->D,(*R)->D);
-		swap(M->Peso,(*R)->Peso);
-		return erase(&(*R)->right,x);
-	}
-	
-	
-	bool erase(trem x){
-		if(!root) return false;
-		Tnode<trem>* aux=erase(&root,x);
-		if(aux!=0){
-			N--;
-			Tnode<trem>::desmontaNode(aux);
-			return true;
-		}
-		return false;
-			
-	}
-	
-	
-	int size()
-	{
-		return N;
-		std::cout << N;
-	}
-	
-	
-	
-	bool empty(){
-		return !root;
-	}
-	
-	
-	static void clear(Tnode<trem>* t){
-		if(!t)return;
-        clear(t->left);
-        clear(t->right);
-        Tnode<trem>::desmontaNode(t);
-	}
-	
-	
-	void clear(){
-		clear(root);
-		root=0;
-		N=0;
-	}
+    Tnode<T>* root;
+    int nodeCount;
+    
+    BinaryTree() : root(nullptr), nodeCount(0) {}
+    
+    // Constructor that combines two trees into a new tree with a root node.
+    BinaryTree(Tnode<T>* leftTree, Tnode<T>* rightTree) {
+        int weightLeft = leftTree->weight;
+        int weightRight = rightTree->weight;
+        root = Tnode<T>::createNode('_', weightLeft + weightRight);
+        nodeCount = 3; // Count: root plus two children
+        
+        // The node with higher weight is placed to the right.
+        if (weightLeft >= weightRight) {
+            root->right = leftTree;
+            root->left = rightTree;
+        } else {
+            root->right = rightTree;
+            root->left = leftTree;
+        }
+    }
+    
+    int getWeight() {
+        return root ? root->weight : 0;
+    }
+    
+    Tnode<T>* getRoot() {
+        return root;
+    }
+    
+    // Recursively inserts a node based on its weight.
+    bool insert(Tnode<T>* newNode, Tnode<T>** tree) {
+        if (!*tree) {
+            *tree = newNode;
+            return true;
+        }
+        if ((*tree)->weight == newNode->weight) {
+            Tnode<T>::destroyNode(newNode);
+            return false;
+        }
+        if (newNode->weight < (*tree)->weight) { 
+            return insert(newNode, &((*tree)->left));
+        }
+        return insert(newNode, &((*tree)->right));
+    }
+    
+    // Inserts a new node using a value and its weight.
+    bool insert(T value, int wt) {
+        Tnode<T>* newNode = Tnode<T>::createNode(value, wt);
+        if (!newNode)
+            return false;
+        if (insert(newNode, &root)) {
+            nodeCount++;
+            return true;
+        }
+        return false;
+    }
+    
+    // Finds the node with the minimum weight in a subtree.
+    Tnode<T>* findMin(Tnode<T>* tree) {
+        while (tree && tree->left)
+            tree = tree->left;
+        return tree;
+    }
+    
+    // Recursively erases a node by weight.
+    Tnode<T>* erase(Tnode<T>** tree, int wt) {
+        Tnode<T>* temp;
+        if (!*tree)
+            return nullptr;
+        if (wt < (*tree)->weight)
+            return erase(&((*tree)->left), wt);
+        if (wt > (*tree)->weight)
+            return erase(&((*tree)->right), wt);
+        if (!(*tree)->left) {
+            temp = *tree;
+            *tree = (*tree)->right;
+            return temp;
+        }
+        if (!(*tree)->right) {
+            temp = *tree;
+            *tree = (*tree)->left;
+            return temp;
+        }
+        Tnode<T>* minNode = findMin((*tree)->right);
+        swap(minNode->data, (*tree)->data);
+        swap(minNode->weight, (*tree)->weight);
+        return erase(&((*tree)->right), wt);
+    }
+    
+    // Erases a node with the specified weight.
+    bool erase(int wt) {
+        if (!root)
+            return false;
+        Tnode<T>* temp = erase(&root, wt);
+        if (temp != nullptr) {
+            nodeCount--;
+            Tnode<T>::destroyNode(temp);
+            return true;
+        }
+        return false;
+    }
+    
+    int size() {
+        return nodeCount;
+    }
+    
+    bool empty() {
+        return root == nullptr;
+    }
+    
+    // Recursively clears the tree freeing all nodes.
+    static void clear(Tnode<T>* tree) {
+        if (!tree)
+            return;
+        clear(tree->left);
+        clear(tree->right);
+        Tnode<T>::destroyNode(tree);
+    }
+    
+    void clear() {
+        clear(root);
+        root = nullptr;
+        nodeCount = 0;
+    }
 };
 
-
-
-
+#endif // BBTREE2_H
