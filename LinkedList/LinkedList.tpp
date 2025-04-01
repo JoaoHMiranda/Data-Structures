@@ -1,4 +1,3 @@
-
 #ifndef LINKEDLIST_TPP
 #define LINKEDLIST_TPP
 
