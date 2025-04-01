@@ -1,134 +1,146 @@
 #include "bbtree2.h"
+#include <bits/stdc++.h>
+using namespace std;
 
-typedef pair<int,pair<Tnode<char>*,int>> pti;
-typedef pair<int,pair<string,char>> psi;
+// Priority queue item type:
+//   first  -> frequency (weight)
+//   second.first  -> pointer to the tree node
+//   second.second -> index of the first occurrence in the text
+typedef pair<int, pair<Tnode<char>*, int>> PriorityTreeItem;
 
+map<char, string> encodingMap;
+map<string, char> decodingMap;
 
-
-map<char,string>crip;
-map<string,char>descrip;
-
-bool ordenas(pti A, pti B){
-	if(A.second.first->Peso < B.second.first->Peso) return true;
-	if(A.second.first->Peso > B.second.first->Peso) return false;
-	if(A.second.first->D =='-') return true;
-	if(B.second.first->D =='-') return true;
-	if(A.second.second >= B.second.second  ) return true;
-	return false;
-}
-	
-void code (Tnode<char>*R,string ss=""){
-	if(R->right!=0){
-		code(R->right,ss+'1');
-	}
-	if(R->left!=0){
-		code(R->left,ss+'0');
-	}
-	if(R->D!='_'){
-		if(ss==""){
-			ss='1';
-		}
-		crip[R->D]=ss;
-		descrip[ss]=R->D;
-	}
+// Comparison function for sorting the priority queue items.
+bool compareItems(const PriorityTreeItem& a, const PriorityTreeItem& b) {
+    if (a.second.first->weight < b.second.first->weight)
+        return true;
+    if (a.second.first->weight > b.second.first->weight)
+        return false;
+    if (a.second.first->data == '-')
+        return true;
+    if (b.second.first->data == '-')
+        return true;
+    if (a.second.second >= b.second.second)
+        return true;
+    return false;
 }
 
+// Recursive function to generate Huffman codes from the tree.
+void generateCodes(Tnode<char>* root, string codeStr = "") {
+    if (root->right != nullptr)
+        generateCodes(root->right, codeStr + '1');
+    if (root->left != nullptr)
+        generateCodes(root->left, codeStr + '0');
+    if (root->data != '_') {
+        if (codeStr == "")
+            codeStr = "1";
+        encodingMap[root->data] = codeStr;
+        decodingMap[codeStr] = root->data;
+    }
+}
 
-
-int main(){
-	//deve usar um arquivo "input.txt" para ler e um "output.txt" para receber o arquivo
-	freopen("input.txt","r",stdin);
-	freopen("output.txt","w",stdout);
-	string frase;
-	string str="";
-	list<pti> pq;
-	vector<string> save;
-	while(getline(cin,frase)){
-		str=str+frase+'\n';
-	}
-	//string lida
-	char jj=0;
-	//par ver melhor caso digite espaso ele será representado pelo menos(-)
-	
-	vector<pair<char,pair<int,int>>>freq(100);
-	for(int i=32;i<=126;i++){
-		freq[i-32].first=jj+i;
-		freq[i-32].second.first=0;
-		freq[i-32].second.second=0;
-	}
-	for(int j=0;j<int(str.size());j++){
-		for(int i=32;i<=126;i++){
-			if(freq[i-32].first==str[j] ){
-				freq[i-32].second.first=freq[i-32].second.first+1;
-				if(freq[i-32].second.second==0){
-					freq[i-32].second.second=j;
-				}
-				i=127;
-			}
-		}
-	}
-	for(int i=32;i<=126;i++){
-		if(freq[i-32].second.first!=0){
-			bbtree<char>aux;
-			aux.insert(freq[i-32].first,freq[i-32].second.first);
-			Tnode<char>* Z=aux.getRoot();
-			pq.push_back({freq[i-32].second.first,{Z,freq[i-32].second.second}});
-		}
-	}
-	pq.sort(ordenas);
-	while(pq.size()!=1){
-		pti x=pq.front();
-		pq.pop_front();
-		pti y=pq.front();
-		pq.pop_front();
-		bbtree<char>aux(x.second.first,y.second.first);
-		Tnode<char>* Z=aux.getRoot();
-		pq.push_back({x.first+y.first,{Z,x.second.second+y.second.second}});
-		pq.sort(ordenas);
-	}
-	bbtree<char>aux;
-	code(pq.front().second.first);
-	cout<<"Frase :"<<endl;
-	cout<<endl;
-	for(int i=0;i<int(str.size());i++){
-		if(str[i]!='*'){
-			cout<<str[i];
-		}
-		else{
-			cout<<endl;
-		}
-	}
-	cout<<endl;
-	cout<<endl;
-	cout<<"Dicionario :"<<endl;
-	cout<<endl;
-	for(auto i: crip){
-		if(i.first=='-'){
-			cout<<" "<<" "<<i.second<<endl;
-		}
-		else{
-			cout<<i.first<<" "<<i.second<<endl;
-		}
-	}
-	cout<<endl;
-	cout<<"Frase criptografada :"<<endl;
-	cout<<endl;
-	for(int j=0;j<int(str.size());j++){
-		if(str[j]=='\n'){
-			cout<<endl;
-		}
-		else{
-			
-			if(str[j]==' '){
-				cout<<crip['-']<<" ";
-				save.push_back(crip['-']);
-			}
-			else{
-				cout<<crip[str[j]]<<" ";
-				save.push_back(crip[str[j]]);
-			}
-		}
-	}
-	cout<<endl;
-	
+int main() {
+    // Use "input.txt" for reading and "output.txt" for writing.
+    freopen("input.txt", "r", stdin);
+    freopen("output.txt", "w", stdout);
+    
+    string line, text = "";
+    list<PriorityTreeItem> priorityQueue;
+    vector<string> encodedSequence;
+    
+    // Read the entire input text.
+    while (getline(cin, line)) {
+        text += line + '\n';
+    }
+    
+    // Frequency count for ASCII characters from 32 to 126.
+    vector<pair<char, pair<int, int>>> frequency(100);
+    for (int ascii = 32; ascii <= 126; ascii++) {
+        frequency[ascii - 32].first = static_cast<char>(ascii);
+        frequency[ascii - 32].second.first = 0;
+        frequency[ascii - 32].second.second = 0;
+    }
+    
+    // Count occurrences and record the index of the first occurrence for each character.
+    for (int j = 0; j < int(text.size()); j++) {
+        for (int ascii = 32; ascii <= 126; ascii++) {
+            if (frequency[ascii - 32].first == text[j]) {
+                frequency[ascii - 32].second.first++;
+                if (frequency[ascii - 32].second.second == 0)
+                    frequency[ascii - 32].second.second = j;
+                break;
+            }
+        }
+    }
+    
+    // For each character that appears in the text, create a node and add it to the priority queue.
+    for (int ascii = 32; ascii <= 126; ascii++) {
+        if (frequency[ascii - 32].second.first != 0) {
+            BinaryTree<char> tree;
+            tree.insert(frequency[ascii - 32].first, frequency[ascii - 32].second.first);
+            Tnode<char>* node = tree.getRoot();
+            priorityQueue.push_back({ frequency[ascii - 32].second.first,
+                                       { node, frequency[ascii - 32].second.second } });
+        }
+    }
+    
+    // Sort the priority queue according to the comparison function.
+    priorityQueue.sort(compareItems);
+    
+    // Build the Huffman tree by combining nodes until only one remains.
+    while (priorityQueue.size() != 1) {
+        PriorityTreeItem leftItem = priorityQueue.front();
+        priorityQueue.pop_front();
+        PriorityTreeItem rightItem = priorityQueue.front();
+        priorityQueue.pop_front();
+        
+        BinaryTree<char> combinedTree(leftItem.second.first, rightItem.second.first);
+        int combinedWeight = leftItem.first + rightItem.first;
+        int combinedOccurrence = leftItem.second.second + rightItem.second.second;
+        priorityQueue.push_back({ combinedWeight, { combinedTree.getRoot(), combinedOccurrence } });
+        priorityQueue.sort(compareItems);
+    }
+    
+    // Generate Huffman codes from the final tree.
+    generateCodes(priorityQueue.front().second.first);
+    
+    // Print the original text.
+    cout << "Text:" << endl << endl;
+    for (char ch : text) {
+        if (ch != '*')
+            cout << ch;
+        else
+            cout << endl;
+    }
+    cout << endl << endl;
+    
+    // Print the dictionary (encoding map).
+    cout << "Dictionary:" << endl << endl;
+    for (auto &item : encodingMap) {
+        if (item.first == '-')
+            cout << " " << " " << item.second << endl;
+        else
+            cout << item.first << " " << item.second << endl;
+    }
+    cout << endl;
+    
+    // Print the encoded text.
+    cout << "Encoded Text:" << endl << endl;
+    for (char ch : text) {
+        if (ch == '\n') {
+            cout << endl;
+        } else {
+            if (ch == ' ') {
+                cout << encodingMap['-'] << " ";
+                encodedSequence.push_back(encodingMap['-']);
+            } else {
+                cout << encodingMap[ch] << " ";
+                encodedSequence.push_back(encodingMap[ch]);
+            }
+        }
+    }
+    cout << endl;
+    
+    return 0;
 }
