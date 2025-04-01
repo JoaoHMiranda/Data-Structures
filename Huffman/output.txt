@@ -1,26 +1,21 @@
-Frase :
+Text:
 
-bom esse bombom
+test
+test
 
-bom esse bombom
-bom esse bombom
-bom esse bombom
+test
 
 
-Dicionario :
+Dictionary:
 
-  110
-b 111
-e 100
-m 01
-o 00
-s 101
+e 10
+s 11
+t 0
 
-Frase criptografada :
+Encoded Text:
 
-111 00 01 110 100 101 101 100 110 111 00 01 111 00 01 
+0 10 11 0 
+0 10 11 0 
 
-111 00 01 110 100 101 101 100 110 111 00 01 111 00 01 
-111 00 01 110 100 101 101 100 110 111 00 01 111 00 01 
-111 00 01 110 100 101 101 100 110 111 00 01 111 00 01 
+0 10 11 0 
 
